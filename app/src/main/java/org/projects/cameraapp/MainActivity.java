@@ -1,5 +1,6 @@
 package org.projects.cameraapp;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -24,6 +25,9 @@ public class MainActivity extends AppCompatActivity {
     static final int REQUEST_IMAGE_CAPTURE = 1;
     ImageView imageView; //for displaying the image.
     String mCurrentPhotoPath; //for storing the path to the image taken.
+    Context context;
+
+    public final static String URL = "https://185.93.195.194/createuser.php";
 
     private File createImageFile() throws IOException {
         // Create an image file name - we want a unique filename
@@ -48,8 +52,8 @@ public class MainActivity extends AppCompatActivity {
                 storageDir      /* directory */
         );
 
-        // Save a file: path for use with ACTION_VIEW intents
-        mCurrentPhotoPath =  image.getAbsolutePath(); //"file:" +
+        // Save a file: path for use with ACTION_VIEW intents used later
+        mCurrentPhotoPath =  image.getAbsolutePath();
         System.out.println("photo path:"+mCurrentPhotoPath);
         return image;
     }
@@ -58,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             //NOTICE we do not get any data directly back from the intent
-            //but the camera app will take the picture and save it in the url
+            //but the camera app will take the picture and save it in the uri
             //we have specified earlier and we can use that path to read the file
             //and convert it into a bitmap.
             if (mCurrentPhotoPath!=null) {
@@ -90,12 +94,14 @@ public class MainActivity extends AppCompatActivity {
             }
             // Continue only if the File was successfully created
             if (photoFile != null) {
-                //This converts our file to a URI, using the provider we have
+                //This creates a URI for our file, using the provider we have
                 //made in the manifest file.
                 Uri photoURI = FileProvider.getUriForFile(this,
                         "org.projects.cameraapp.fileprovider",
                         photoFile);
+                //putting the URI in the Intent for the camera app to use
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                //start the intent and wait for the result.
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
             }
 
@@ -111,8 +117,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //Saving the imageview reference
         imageView = (ImageView) findViewById(R.id.imageView);
+        context = this;
         Button pictureButton = (Button) findViewById(R.id.pictureButton);
+        //putting a clicklistener on the button.
         pictureButton.setOnClickListener(new View.OnClickListener() {
             //What should happen when we click the take image button.
             @Override
@@ -120,5 +129,37 @@ public class MainActivity extends AppCompatActivity {
                 dispatchTakePictureIntent();
             }
         });
+        Button createUserButton = (Button) findViewById(R.id.createUser);
+        createUserButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                createUser();
+            }
+        });
+
     }
+
+
+    public void createUser() {
+        OkCancelInputDialog dialog = new OkCancelInputDialog(this,"Create user","Choose a username")
+        {
+            @Override
+            public void clickCancel() {
+                super.clickCancel();
+            }
+
+            @Override
+            public void clickOk() {
+                Toast toast = Toast.makeText(context,"Creating user...please wait",Toast.LENGTH_LONG);
+                toast.show();
+                Communication coms = new Communication(context);
+                coms.CreateUser(URL,getUserInput());
+                super.clickOk();
+            }
+        };
+        dialog.show();
+
+
+    }
+
 }
