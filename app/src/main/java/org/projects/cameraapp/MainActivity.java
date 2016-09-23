@@ -12,6 +12,7 @@ import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -26,8 +27,12 @@ public class MainActivity extends AppCompatActivity {
     ImageView imageView; //for displaying the image.
     String mCurrentPhotoPath; //for storing the path to the image taken.
     Context context;
+    Communication communication;
+    String token = "testtoken";
+    String imageName = "imageTestName";
+    Bitmap imageBitmap;
 
-    public final static String URL = "https://185.93.195.194/createuser.php";
+
 
     private File createImageFile() throws IOException {
         // Create an image file name - we want a unique filename
@@ -67,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
             //and convert it into a bitmap.
             if (mCurrentPhotoPath!=null) {
                 //decoding the file into a bitmap
-                Bitmap imageBitmap = BitmapFactory.decodeFile(mCurrentPhotoPath);
+                imageBitmap = BitmapFactory.decodeFile(mCurrentPhotoPath);
                 //setting the bitmap on the image file.
                 imageView.setImageBitmap(imageBitmap);
             }
@@ -117,9 +122,35 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        communication = new Communication(this);
+        communication.setupSSLCertificate();
         //Saving the imageview reference
         imageView = (ImageView) findViewById(R.id.imageView);
         context = this;
+        Button uploadButton = (Button) findViewById(R.id.uploadPictureButton);
+        final EditText caseidEdit = (EditText) findViewById(R.id.caseidEdit);
+        final EditText descriptionEdit = (EditText) findViewById(R.id.descriptionEdit);
+        uploadButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String caseid = caseidEdit.getText().toString();
+                String description = descriptionEdit.getText().toString();
+                if (imageBitmap==null)
+                {
+                    Toast toast = Toast.makeText(context,"Missing image!",Toast.LENGTH_SHORT);
+                    toast.show();
+                }
+                else if (caseid!=null && caseid.length()>0 && description!=null && description.length()>0)
+                {
+                    imageName+=System.currentTimeMillis()+"";
+                    communication.uploadPicture(imageBitmap,token,caseid,description,imageName);
+                }
+                else {
+                    Toast toast = Toast.makeText(context,"Missing input in case or description",Toast.LENGTH_SHORT);
+                    toast.show();
+                }
+            }
+        });
         Button pictureButton = (Button) findViewById(R.id.pictureButton);
         //putting a clicklistener on the button.
         pictureButton.setOnClickListener(new View.OnClickListener() {
@@ -152,8 +183,8 @@ public class MainActivity extends AppCompatActivity {
             public void clickOk() {
                 Toast toast = Toast.makeText(context,"Creating user...please wait",Toast.LENGTH_LONG);
                 toast.show();
-                Communication coms = new Communication(context);
-                coms.CreateUser(URL,getUserInput());
+                //Communication coms = new Communication(context);
+                communication.CreateUser(getUserInput(),token);
                 super.clickOk();
             }
         };
