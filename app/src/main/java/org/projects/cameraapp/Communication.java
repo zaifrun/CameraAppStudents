@@ -1,18 +1,17 @@
 package org.projects.cameraapp;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.util.Base64;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.RetryPolicy;
-import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.StringRequest;
@@ -21,10 +20,7 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.KeyStore;
@@ -39,6 +35,8 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManagerFactory;
+
+import static android.content.Context.MODE_PRIVATE;
 
 /**
  * Created by makn on 19-09-2016.
@@ -67,24 +65,9 @@ public class Communication {
         }
     }
 
-    private String convertStreamToString(InputStream is) {
-        String line = "";
-        StringBuilder total = new StringBuilder();
-        BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-        try {
-            while ((line = rd.readLine()) != null) {
-                total.append(line);
-            }
-        } catch (Exception e) {
-            Log.d("Error","Stream Exception");
-           // Toast.makeText(context, "Stream Exception", Toast.LENGTH_SHORT).show();
-        }
-        return total.toString();
-    }
 
     public void setupSSLCertificate()
     {
-       // queue = Volley.newRequestQueue(context);
         String ur = URL_BASE;
         System.out.println("setting up ssl ca");
         URL url = null;
@@ -170,127 +153,37 @@ public class Communication {
 
     }
 
-    public String trimMessage(String json, String key){
-        String trimmedString = null;
-
-        try{
-            JSONObject obj = new JSONObject(json);
-            trimmedString = obj.getString(key);
-        } catch(JSONException e){
-            e.printStackTrace();
-            return null;
-        }
-
-        return trimmedString;
-    }
-
-    public String uploadPicture(final Bitmap bitmap,final String token,
+    public void uploadPicture(final Bitmap bitmap,final String token,
                                 final String caseId, final String description,
                                 final String imageName)
     {
-        System.out.println("uploading image...");
-        String url = URL_UPLOADIMAGE;
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
-        byte[] byteArray = byteArrayOutputStream .toByteArray();
-        final String encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
-
-
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
-                new Response.Listener<String>() {
-
-                    @Override
-                    public void onResponse(String response) {
-                        // Display the first 500 characters of the response string.
-                        Log.d("ResponseUploadImage", response);
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.d("ErrorServerUpload",error.toString());
-                System.out.println("error from server");
-                String json2 = null;
-                if (error.networkResponse == null) {
-                    if (error.getClass().equals(TimeoutError.class)) {
-                        // Show timeout error message
-                        Log.d("ErrorTimeOut","TimeOut errror");
-
-                    }
-                }
-
-                NetworkResponse response = error.networkResponse;
-                if(response != null && response.data != null){
-                    switch(response.statusCode){
-                        case 400:
-                            json2 = new String(response.data);
-                           // json2 = trimMessage(json2, "message");
-                            if(json2 != null)
-                                Log.d("ErrorServerUpload", json2);
-                            break;
-                        case 200:
-                            json2 = new String(response.data);
-                            // json2 = trimMessage(json2, "message");
-                            if(json2 != null)
-                                Log.d("SucccesUploading", json2);
-                            break;
-                    }
-                    //Additional cases
-                }
-                if (error.getMessage()!=null)
-                    Log.d("ErrorServerUpload", error.getMessage().toString());
-            }
-        }) {
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                HashMap<String,String> map = new HashMap<>();
-                JSONObject json = new JSONObject();
-
-                try {
-                    json.put("token", token);
-                    json.put("case_id",Integer.valueOf(caseId).intValue());
-                    json.put("description",description);
-                    json.put("name",imageName);
-                    System.out.println("JSON:"+json.toString());
-
-                    json.put("base64",encoded);
-                }
-                catch (JSONException e)
-                {
-                    Log.d("JsonExceptionUpload",e.getMessage().toString());
-                }
-                map.put("json", json.toString());
-                //System.out.println("JSON:"+json.toString());
-                return map;
-            }
-        };
-
-// Add the request to the RequestQueue.
-        int socketTimeout = 40000;//20 seconds - change to what you want
-        RetryPolicy policy = new DefaultRetryPolicy(socketTimeout, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
-        stringRequest.setRetryPolicy(policy);
-        queue.add(stringRequest);
-
-        return "";
+        //TODO implement this method
     }
 
-    public String CreateUser(final String userName, final String token) {
+    public void CreateUser(final String userName, final String token) {
         String url = URL_CREATEUSER;
-        //setupSSLCertificate(url);
-// Request a string response from the provided URL.
+        // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
 
                     @Override
                     public void onResponse(String response) {
-                        // Display the first 500 characters of the response string.
                         Log.d("Response", response);
+                        SharedPreferences prefs = context.getSharedPreferences("myPrefs", MODE_PRIVATE);
+                        //save the preferences.
+                        prefs.edit().putString("token",token);
+                        prefs.edit().commit();
+                        Toast.makeText(context,response,Toast.LENGTH_SHORT).show();
+
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.d("ErrorResponseServer",error.toString());
-                if (error.getMessage()!=null)
+                if (error.getMessage()!=null) {
                     Log.d("ErrorResponseServer", error.getMessage().toString());
+                    Toast.makeText(context,error.getMessage().toString(),Toast.LENGTH_SHORT).show();
+                }
             }
         }) {
             @Override
@@ -312,13 +205,13 @@ public class Communication {
             }
         };
 
-// Add the request to the RequestQueue.
         int socketTimeout = 20000;//20 seconds - change to what you want
         RetryPolicy policy = new DefaultRetryPolicy(socketTimeout, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
         stringRequest.setRetryPolicy(policy);
+        // Add the request to the RequestQueue.
+
         queue.add(stringRequest);
 
-        return "";
     }
 
 
