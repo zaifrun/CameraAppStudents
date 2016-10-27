@@ -171,8 +171,10 @@ public class Communication {
                         Log.d("Response", response);
                         SharedPreferences prefs = context.getSharedPreferences("myPrefs", MODE_PRIVATE);
                         //save the preferences.
-                        prefs.edit().putString("token",token);
-                        prefs.edit().commit();
+
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putString("token",token);
+                        boolean result = editor.commit();
                         Toast.makeText(context,response,Toast.LENGTH_SHORT).show();
 
                     }
