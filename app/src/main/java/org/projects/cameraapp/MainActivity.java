@@ -2,7 +2,6 @@ package org.projects.cameraapp;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
@@ -28,7 +27,6 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     Context context;
-    String imageName = "imageName";
     Bitmap imageBitmap;
     static final int REQUEST_IMAGE_CAPTURE = 1;
     ImageView imageView; //for displaying the image.
@@ -135,10 +133,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        imageView = (ImageView) findViewById(R.id.imageView);
+        imageView = findViewById(R.id.imageView);
         context = this;
 
-        Button pictureButton = (Button) findViewById(R.id.pictureButton);
+        Button pictureButton = findViewById(R.id.pictureButton);
         //putting a clicklistener on the button.
         pictureButton.setOnClickListener(new View.OnClickListener() {
             //What should happen when we click the take image button.
