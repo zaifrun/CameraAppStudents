@@ -150,6 +150,7 @@ public class MainActivity extends AppCompatActivity {
         clearButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //setting the resource to 0 will clear the image
                 imageView.setImageResource(0);
             }
         });
